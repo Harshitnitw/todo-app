@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>To-Do List</title>
+</head>
+<body>
+  <h1>To-Do List</h1>
+  <ul id="todo-list">
+    <!-- Tasks will be dynamically added here -->
+  </ul>
+  <form id="add-task-form">
+    <input type="text" id="newTask" placeholder="New Task">
+    <button type="submit">Add</button>
+  </form>
+
+  <script>
+    // Function to create a list item for a task
+    function createTaskListItem(todo) {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `
+        ${todo.task}
+        <form action="/delete" method="post">
+          <input type="checkbox" name="checkbox" value="${todo._id}">
+          <button type="submit">Delete</button>
+        </form>
+      `;
+      return listItem;
+    }
+
+    // Function to render the list of tasks
+    function renderTodoList(todos) {
+      const todoList = document.getElementById('todo-list');
+      todoList.innerHTML = ''; // Clear the existing list
+
+      todos.forEach((todo) => {
+        const listItem = createTaskListItem(todo);
+        todoList.appendChild(listItem);
+      });
+    }
+
+    // Handle form submission to add a new task (you can add your own logic here)
+    const addTaskForm = document.getElementById('add-task-form');
+    addTaskForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const newTaskInput = document.getElementById('newTask');
+      const newTask = newTaskInput.value.trim();
+      if (newTask) {
+        // Make a request to your server to add the new task
+        const response = await fetch('/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ newTask }),
+        });
+
+        if (response.ok) {
+          const newTodo = await response.json();
+          newTaskInput.value = ''; // Clear the input
+          renderTodoList([...todos, newTodo]); // Update the task list
+        }
+      }
+    });
+
+    // Fetch tasks from your server (replace the URL with your actual endpoint)
+    fetch('/')
+      .then((response) => response.json())
+      .then((data) => {
+        renderTodoList(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching tasks:', error);
+      });
+  </script>
+</body>
+</html>
